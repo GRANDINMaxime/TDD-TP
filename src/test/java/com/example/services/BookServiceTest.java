@@ -24,6 +24,8 @@ public class BookServiceTest {
 
     @Mock
     private BookRepository bookRepository; // Création du mock du repository
+    @Mock
+    private ISBNValidator isbnValidator;
 
     @InjectMocks
     private BookService bookService; // Injection automatique du mock
@@ -36,17 +38,51 @@ public class BookServiceTest {
         assertEquals(books, existingListOfBooks);
     }
 
-
     @Test
     public void testAddBook_Success() {
+ 
+        Book book = new Book("9782853006322", "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
 
-        Book book = new Book("123456789", "Mockito for Dummies", "John Doe", "TechBooks", Format.BROCHE, true);
-
+        when(bookRepository.findByIsbn(book.getIsbn())).thenReturn(null);
+        when(isbnValidator.validateISBN(book.getIsbn())).thenReturn(true);
         when(bookRepository.save(book)).thenReturn(book);
 
         Book savedBook = bookService.addBook(book);
 
+        verify(bookRepository).findByIsbn(book.getIsbn());
+        verify(bookRepository).save(book);
+
         assertNotNull(savedBook);
+    }
+
+    @Test
+    public void testAddBook_InvalidIsbn() {
+    
+        String invalidISBN = "1234ABCDE";
+        Book book = new Book(invalidISBN, "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
+
+        when(isbnValidator.validateISBN(book.getIsbn())).thenReturn(false);
+ 
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> bookService.addBook(book));
+
+        assertEquals("Invalid ISBN: "+invalidISBN, exception.getMessage());
+
+        verify(bookRepository, never()).save(any(Book.class));
+    }
+    
+    @Test
+    public void testAddBook_DuplicateISBN() {
+
+        String uniqueIsbn = "1234567890";
+        Book book = new Book(uniqueIsbn, "The Lord of the Rings", "J.R.R. Tolkien",
+                "Houghton Mifflin Harcourt", Format.BROCHE, false);
+
+        when(bookRepository.findByIsbn(uniqueIsbn)).thenReturn(new Book(uniqueIsbn, "Existing Book", "Author", "Publisher", Format.GRAND_FORMAT, true));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> bookService.addBook(book));
+        assertEquals("Duplicate ISBN: " + uniqueIsbn, exception.getMessage());
+
+        verify(bookRepository, never()).save(any(Book.class));
     }
 
     @Test
