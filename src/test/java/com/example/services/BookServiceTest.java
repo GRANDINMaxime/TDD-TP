@@ -25,7 +25,7 @@ public class BookServiceTest {
     @Mock
     private BookRepository bookRepository; // Création du mock du repository
     @Mock
-    private ISBNValidator isbnValidator;
+    private ISBNValidatorService isbnValidator;
     @Mock
     private BookWebService webService;
     @InjectMocks
@@ -123,6 +123,18 @@ public class BookServiceTest {
     }
     
     @Test
+    public void testDeleteBook_NotExisting() {
+        Book book = new Book("9782853006322", "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
+        
+        when(bookRepository.findByIsbn(book.getIsbn())).thenReturn(null);
+
+        assertThrows(IllegalArgumentException.class, () -> bookService.deleteBook(book));
+
+        verify(bookRepository).findByIsbn(book.getIsbn());
+        verify(bookRepository, never()).delete(any(Book.class)); 
+    }
+
+    @Test
     public void testAddBookRetrieveMissingInformation_Success() {
  
         Book incompleteBook = new Book("1234567890", null, null, null, Format.BROCHE, false);
@@ -150,6 +162,42 @@ public class BookServiceTest {
         when(webService.getBookByISBN(book.getIsbn())).thenReturn(null);
 
         assertNull(bookService.retrieveMissingInformation(book));
+    }
+
+    @Test
+    public void testSearchBook_ByIsbn() {
+        Book mockBook = new Book("9782853006322", "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
+        
+        when(bookRepository.findByIsbn("9782853006322")).thenReturn(mockBook);
+        
+        Book searchResult = bookService.searchBook("9782853006322", null, null);
+        
+        verify(bookRepository).findByIsbn("9782853006322");
+        assertEquals(mockBook, searchResult);
+    }
+
+    @Test
+    public void testSearchBook_ByTitle() {
+        Book mockBook = new Book("9782853006322", "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
+        
+        when(bookRepository.findByTitle("La Genèse")).thenReturn(mockBook);
+        
+        Book searchResult = bookService.searchBook(null, "La Genèse", null);
+        
+        verify(bookRepository).findByTitle("La Genèse");
+        assertEquals(mockBook, searchResult);
+    }
+
+    @Test
+    public void testSearchBook_ByAuthor() {
+        Book mockBook = new Book("9782853006322", "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
+        
+        when(bookRepository.findByAuthor("Moïse")).thenReturn(mockBook);
+        
+        Book searchResult = bookService.searchBook(null, null, "Moïse");
+        
+        verify(bookRepository).findByAuthor("Moïse");
+        assertEquals(mockBook, searchResult);
     }
 
 }

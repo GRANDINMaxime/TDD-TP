@@ -8,6 +8,10 @@ public interface BookRepository {
     
     Book findByIsbn(String isbn);
 
+    Book findByTitle(String title);
+
+    Book findByAuthor(String author);
+
     Book save(Book book);
 
     Book delete(Book book);

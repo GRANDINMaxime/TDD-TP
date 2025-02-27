@@ -1,6 +1,6 @@
 package com.example.services;
 
-public class ISBNValidator {
+public class ISBNValidatorService {
     private static final int LONG_ISBN_LENGTH = 13;
         private static final int SHORT_ISBN_LENGTH = 10;
         private static final int LONG_ISBN_DIVIDER = 10;

@@ -7,10 +7,10 @@ import com.example.repositories.BookRepository;
 public class BookService {
 
     private final BookRepository bookRepository;
-    private final ISBNValidator isbnValidator;
+    private final ISBNValidatorService isbnValidator;
     private BookWebService webServiceResponse;
 
-    public BookService(BookRepository bookRepository, ISBNValidator isbnValidator, BookWebService webServiceResponse) {
+    public BookService(BookRepository bookRepository, ISBNValidatorService isbnValidator, BookWebService webServiceResponse) {
         this.bookRepository = bookRepository;
         this.isbnValidator = isbnValidator;
         this.webServiceResponse = webServiceResponse;
@@ -49,7 +49,6 @@ public class BookService {
         return book;
     }
     
-
     public Book updateBook(Book book) {
         if (book == null || book.getIsbn() == null || book.getIsbn().isEmpty()) {
             throw new IllegalArgumentException("Book object or ISBN cannot be null or empty");
@@ -70,6 +69,7 @@ public class BookService {
 
         return existingBook;
     }
+    
     public void deleteBook(Book book) {
         if (book == null || book.getIsbn() == null || book.getIsbn().isEmpty()) {
             throw new IllegalArgumentException("Book object or ISBN cannot be null or empty");
@@ -82,6 +82,7 @@ public class BookService {
 
         bookRepository.delete(existingBook);
     }
+    
     public Book retrieveMissingInformation(Book book) { // Consider adding exception for web service errors
         // Check if any fields are missing
         if (book.getTitle() == null || book.getAuthor() == null || book.getPublisher() == null) {
@@ -102,4 +103,22 @@ public class BookService {
 
         return book;
     }
+
+    public Book searchBook(String isbn, String title, String author) {
+        if ((isbn == null || isbn.isEmpty()) && (title == null || title.isEmpty()) && (author == null || author.isEmpty())) {
+            throw new IllegalArgumentException("At least one search criterion (ISBN, title, or author) must be provided.");
+        }
+        if (isbn != null && !isbn.isEmpty()) {
+            return bookRepository.findByIsbn(isbn);
+        }
+        if (title != null && !title.isEmpty()) {
+            return bookRepository.findByTitle(title);
+        }
+        if (author != null && !author.isEmpty()) {
+            return bookRepository.findByAuthor(author);
+        }
+    
+        return null;
+    }
+    
 }
