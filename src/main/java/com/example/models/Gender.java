@@ -1,6 +1,6 @@
 package com.example.models;
 
-public enum MaritalStatus {
+public enum Gender {
     MADAME, MONSIEUR
 }
 

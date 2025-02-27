@@ -11,16 +11,16 @@ public class Member {
     private final String lastName;
     private final String firstName;
     private final LocalDate dateOfBirth;
-    private final MaritalStatus maritalStatus;
+    private final Gender gender;
     private final List<Reservation> reservations;
 
-    public Member(Long id, String membershipCode, String lastName, String firstName, LocalDate dateOfBirth, MaritalStatus maritalStatus) {
+    public Member(Long id, String membershipCode, String lastName, String firstName, LocalDate dateOfBirth, Gender gender) {
         this.id = id;
         this.membershipCode = membershipCode;
         this.lastName = lastName;
         this.firstName = firstName;
         this.dateOfBirth = dateOfBirth;
-        this.maritalStatus = maritalStatus;
+        this.gender = gender;
         this.reservations = new ArrayList<>();
     }
 
@@ -45,8 +45,8 @@ public class Member {
         return dateOfBirth;
     }
 
-    public MaritalStatus getMaritalStatus() {
-        return maritalStatus;
+    public Gender getGender() {
+        return gender;
     }
 
     public List<Reservation> getReservations() {
