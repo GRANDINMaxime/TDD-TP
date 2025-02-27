@@ -8,10 +8,12 @@ public class BookService {
 
     private final BookRepository bookRepository;
     private final ISBNValidator isbnValidator;
+    private BookWebService webServiceResponse;
 
-    public BookService(BookRepository bookRepository, ISBNValidator isbnValidator) {
+    public BookService(BookRepository bookRepository, ISBNValidator isbnValidator, BookWebService webServiceResponse) {
         this.bookRepository = bookRepository;
         this.isbnValidator = isbnValidator;
+        this.webServiceResponse = webServiceResponse;
     }
 
     public List<Book> getAll(){
@@ -27,18 +29,22 @@ public class BookService {
             throw new IllegalArgumentException("Book cannot be null");
         }
     
-        // Vérifier l'ISBN
         if (!bookIsValid(book)) {
             throw new IllegalArgumentException("Invalid ISBN: " + book.getIsbn());
         }
     
-        // Vérifier la présence du livre en base
         Book existingBook = bookRepository.findByIsbn(book.getIsbn());
         if (existingBook != null) {
             throw new IllegalArgumentException("Duplicate ISBN: " + book.getIsbn());
         }
     
-        // Sauvegarde du livre
+        if (book.getTitle() == null || book.getAuthor() == null || book.getPublisher() == null) {
+            book = retrieveMissingInformation(book);
+            if (book == null) {
+                throw new IllegalArgumentException("Missing book information and no data found in web service");
+            }
+        }
+
         bookRepository.save(book);
         return book;
     }
@@ -75,5 +81,25 @@ public class BookService {
         }
 
         bookRepository.delete(existingBook);
+    }
+    public Book retrieveMissingInformation(Book book) { // Consider adding exception for web service errors
+        // Check if any fields are missing
+        if (book.getTitle() == null || book.getAuthor() == null || book.getPublisher() == null) {
+            // Retrieve book information from web service using ISBN from the book
+            Book webService = webServiceResponse.getBookByISBN(book.getIsbn());
+
+            if(webService != null){
+                // Update book fields with web service data
+                book.setTitle(webService.getTitle());
+                book.setAuthor(webService.getAuthor());
+                book.setPublisher(webService.getPublisher());
+            }
+            else{
+                return null;
+            }
+
+        }
+
+        return book;
     }
 }

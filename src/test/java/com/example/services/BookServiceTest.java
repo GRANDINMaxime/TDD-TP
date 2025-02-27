@@ -26,7 +26,8 @@ public class BookServiceTest {
     private BookRepository bookRepository; // Création du mock du repository
     @Mock
     private ISBNValidator isbnValidator;
-
+    @Mock
+    private BookWebService webService;
     @InjectMocks
     private BookService bookService; // Injection automatique du mock
 
@@ -40,19 +41,26 @@ public class BookServiceTest {
 
     @Test
     public void testAddBook_Success() {
- 
+
         Book book = new Book("9782853006322", "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
 
-        when(bookRepository.findByIsbn(book.getIsbn())).thenReturn(null);
-        when(isbnValidator.validateISBN(book.getIsbn())).thenReturn(true);
-        when(bookRepository.save(book)).thenReturn(book);
+        when(bookRepository.findByIsbn(book.getIsbn())).thenReturn(null); 
+        when(isbnValidator.validateISBN(book.getIsbn())).thenReturn(true); 
+        when(bookRepository.save(any(Book.class))).thenReturn(book); 
 
         Book savedBook = bookService.addBook(book);
 
-        verify(bookRepository).findByIsbn(book.getIsbn());
-        verify(bookRepository).save(book);
+        verify(bookRepository).findByIsbn(book.getIsbn()); 
+        verify(isbnValidator).validateISBN(book.getIsbn()); 
+        verify(bookRepository).save(book); 
 
         assertNotNull(savedBook);
+        assertEquals("9782853006322", savedBook.getIsbn());
+        assertEquals("La Genèse", savedBook.getTitle());
+        assertEquals("Moïse", savedBook.getAuthor());
+        assertEquals("Société Biblique Française", savedBook.getPublisher());
+        assertEquals(Format.BROCHE, savedBook.getFormat());
+        assertTrue(savedBook.isAvailable());
     }
 
     @Test
@@ -87,7 +95,7 @@ public class BookServiceTest {
 
     @Test
     public void testUpdateBook_ExistingBook() {
-        Book existingBook = new Book("140274577X", "Book Title", "Author", "Publisher", Format.GRAND_FORMAT, true);
+        Book existingBook = new Book("9782853006322", "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
         when(bookRepository.findByIsbn(existingBook.getIsbn())).thenReturn(existingBook);
 
         Book updatedBook = new Book(existingBook.getIsbn(), "New Title", "New Author", "New Publisher", Format.BROCHE, true);
@@ -105,7 +113,7 @@ public class BookServiceTest {
 
     @Test
     public void testDeleteBook_ExistingBook() {
-        Book existingBook = new Book("1234567890", "Title", "Author", "Publisher", Format.BROCHE, true);
+        Book existingBook = new Book("9782853006322", "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
         when(bookRepository.findByIsbn(existingBook.getIsbn())).thenReturn(existingBook);
 
         bookService.deleteBook(existingBook);
@@ -113,5 +121,37 @@ public class BookServiceTest {
         verify(bookRepository).findByIsbn(existingBook.getIsbn());
         verify(bookRepository).delete(existingBook);
     }
+    
+    @Test
+    public void testAddBookRetrieveMissingInformation_Success() {
+ 
+        Book incompleteBook = new Book("1234567890", null, null, null, Format.BROCHE, false);
+        Book webServiceResponse = new Book("1234567890", "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
+
+        when(webService.getBookByISBN(incompleteBook.getIsbn())).thenReturn(webServiceResponse);
+        when(isbnValidator.validateISBN(incompleteBook.getIsbn())).thenReturn(true);
+        when(bookRepository.save(any(Book.class))).thenReturn(incompleteBook);
+
+        Book addedBook = bookService.addBook(incompleteBook);
+        Book updatedBook = bookService.retrieveMissingInformation(addedBook);
+
+        verify(bookRepository).save(any(Book.class));
+        assertNotNull(updatedBook);
+        assertEquals(webServiceResponse.getTitle(), updatedBook.getTitle());
+        assertEquals(webServiceResponse.getAuthor(), updatedBook.getAuthor());
+        assertEquals(webServiceResponse.getPublisher(), updatedBook.getPublisher());
+    }
+
+    @Test
+    public void testRetrieveMissingInformation_WebServiceNoData() {
+
+        Book book = new Book("1234567890", null, null, null, Format.BROCHE, false);
+
+        when(webService.getBookByISBN(book.getIsbn())).thenReturn(null);
+
+        assertNull(bookService.retrieveMissingInformation(book));
+    }
+
 }
+
 
