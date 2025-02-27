@@ -12,7 +12,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class MemberServiceTest {
+public class MemberServiceTest {
 
     private MemberService memberService;
     private MemberRepository memberRepositoryMock;

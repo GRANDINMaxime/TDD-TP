@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 public class IsbnValidatorTest {
     @Test
-    public void checkValid10CharsISBNCode() {
+    public void testCheckValid10CharsISBNCode() {
         ISBNValidatorService validator = new ISBNValidatorService();
         boolean result = validator.validateISBN("2210765528");
         assertTrue(result, "first assertion");
@@ -15,34 +15,34 @@ public class IsbnValidatorTest {
     }
 
     @Test
-    public void checkInvalid10CharsISBNCode() {
+    public void testCheckInvalid10CharsISBNCode() {
         ISBNValidatorService validator = new ISBNValidatorService();
         boolean result = validator.validateISBN("2210765525");
         assertFalse(result);
     }
 
     @Test
-    public void invalidLengthShouldThrowsException() {
+    public void testInvalidLengthShouldThrowsException() {
         ISBNValidatorService validator = new ISBNValidatorService();
         assertThrows(NumberFormatException.class, () -> validator.validateISBN("123456789"));
         assertThrows(NumberFormatException.class, () -> validator.validateISBN("12345678912"));
     }
 
     @Test
-    public void nonNumericISBNThrowsException() {
+    public void testNonNumericISBNThrowsException() {
         ISBNValidatorService validator = new ISBNValidatorService();
         assertThrows(NumberFormatException.class, () -> validator.validateISBN("helloworld"));
     }
 
     @Test
-    public void checkISBNEndingWithAnXIsValid() {
+    public void testCheckISBNEndingWithAnXIsValid() {
         ISBNValidatorService validator = new ISBNValidatorService();
         boolean result = validator.validateISBN("140274577X");
         assertTrue(result);
     }
 
     @Test
-    public void checkValid13CharsISBNCode() {
+    public void testCheckValid13CharsISBNCode() {
         ISBNValidatorService validator = new ISBNValidatorService();
         boolean result = validator.validateISBN("9781402745775");
         assertTrue(result);
