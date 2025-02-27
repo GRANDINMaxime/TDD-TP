@@ -10,6 +10,7 @@ import org.mockito.MockitoAnnotations;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class ReservationServiceTest {
@@ -94,5 +95,42 @@ class ReservationServiceTest {
 
         verify(bookRepository).findByIsbn(isbn);
     }
+
+    @Test
+    void testMakeReservation_Successful() {
+ 
+        String isbn = "9782853006322";
+        LocalDate reservationDate = LocalDate.now(); 
+
+        Book book = new Book(isbn, "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
+        Member member = new Member(8L, "5", "GRANDIN", "Maxime", LocalDate.now().minusYears(25), Gender.MONSIEUR);
+
+        when(bookRepository.findByIsbn(isbn)).thenReturn(book);
+        when(memberRepository.findById("memberId")).thenReturn(member);
+        when(reservationRepository.countByMemberIdAndEndDateIsNull("memberId")).thenReturn(2);
+        when(reservationRepository.save(any(Reservation.class))).thenReturn(new Reservation(4L, book, member, reservationDate, LocalDate.now(), ReservationStatus.ACTIVE));
+
+        Reservation reservation = reservationService.makeReservation(isbn, reservationDate, "memberId");
+
+        assertNotNull(reservation);
+        verify(reservationRepository).save(any(Reservation.class));
+    }
+
+    @Test
+    void testMakeReservation_MaxReservationsReached() {
+
+        String isbn = "9782853006322";
+        LocalDate reservationDate = LocalDate.now();
+
+        Book book = new Book(isbn, "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
+        Member member = new Member(8L, "5", "GRANDIN", "Maxime", LocalDate.now().minusYears(25), Gender.MONSIEUR);
+
+        when(bookRepository.findByIsbn(isbn)).thenReturn(book);
+        when(memberRepository.findById("memberId")).thenReturn(member);
+        when(reservationRepository.countByMemberIdAndEndDateIsNull("memberId")).thenReturn(3);
+
+        assertThrows(IllegalArgumentException.class, () -> reservationService.makeReservation(isbn, reservationDate, "memberId"));
+    }
+
 
 }
