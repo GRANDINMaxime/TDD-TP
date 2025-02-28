@@ -81,8 +81,7 @@ public class BookServiceTest {
     public void testAddBook_DuplicateISBN() {
 
         String uniqueIsbn = "1234567890";
-        Book book = new Book(uniqueIsbn, "The Lord of the Rings", "J.R.R. Tolkien",
-                "Houghton Mifflin Harcourt", Format.BROCHE, false);
+        Book book = new Book(uniqueIsbn, "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
 
         when(bookRepository.findByIsbn(uniqueIsbn)).thenReturn(new Book(uniqueIsbn, "Existing Book", "Author", "Publisher", Format.GRAND_FORMAT, true));
 

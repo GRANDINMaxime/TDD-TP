@@ -46,4 +46,9 @@ public class ReservationController {
         boolean cancelled = reservationService.cancelReservation(id);
         return cancelled ? ResponseEntity.ok("Reservation canceled.") : ResponseEntity.badRequest().body("Cancellation failed.");
     }
+
+    @GetMapping("/history/{memberId}")
+    public List<Reservation> getReservationHistory(@PathVariable String memberId) {
+        return reservationService.getReservationHistory(memberId);
+    }
 }

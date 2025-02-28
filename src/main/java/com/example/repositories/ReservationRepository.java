@@ -20,4 +20,7 @@ public interface ReservationRepository {
 
     Reservation findAll();
 
+    public List<Reservation> findByMemberId(String memberId);
+
+
 }

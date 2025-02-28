@@ -29,14 +29,16 @@ public class BookService {
             throw new IllegalArgumentException("Book cannot be null");
         }
     
-        if (!bookIsValid(book)) {
-            throw new IllegalArgumentException("Invalid ISBN: " + book.getIsbn());
-        }
-    
         Book existingBook = bookRepository.findByIsbn(book.getIsbn());
         if (existingBook != null) {
             throw new IllegalArgumentException("Duplicate ISBN: " + book.getIsbn());
         }
+
+        if (!bookIsValid(book)) {
+            throw new IllegalArgumentException("Invalid ISBN: " + book.getIsbn());
+        }
+    
+        
     
         if (book.getTitle() == null || book.getAuthor() == null || book.getPublisher() == null) {
             book = retrieveMissingInformation(book);

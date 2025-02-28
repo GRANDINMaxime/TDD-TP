@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,7 +36,7 @@ class ReservationServiceTest {
     private EmailService emailService;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         MockitoAnnotations.initMocks(this);
         reservationService = new ReservationService(reservationRepository, memberRepository, bookService, bookRepository
         //, emailService
@@ -43,7 +44,7 @@ class ReservationServiceTest {
     }
 
     @Test
-    void testCheckAvailability_Success() {
+    public void testCheckAvailability_Success() {
 
         String isbn = "9782853006322";
         LocalDate reservationDate = LocalDate.of(2025, 3, 1);
@@ -59,7 +60,7 @@ class ReservationServiceTest {
     }
 
     @Test
-    void testCheckAvailability_ReservationAlreadyExists() {
+    public void testCheckAvailability_ReservationAlreadyExists() {
 
         String isbn = "9782853006322";
         LocalDate reservationDate = LocalDate.of(2025, 3, 1);
@@ -76,7 +77,7 @@ class ReservationServiceTest {
     }
 
     @Test
-    void testCheckAvailability_ReservationDateAfterMaxAllowed() {
+    public void testCheckAvailability_ReservationDateAfterMaxAllowed() {
   
         String isbn = "9782853006322";
         LocalDate reservationDate = LocalDate.now().plusMonths(5); 
@@ -91,7 +92,7 @@ class ReservationServiceTest {
     }
 
     @Test
-    void testCheckAvailability_BookNotFound() {
+    public void testCheckAvailability_BookNotFound() {
 
         String isbn = "978285300632";
         when(bookRepository.findByIsbn(isbn)).thenReturn(null);
@@ -104,7 +105,7 @@ class ReservationServiceTest {
     }
 
     @Test
-    void testMakeReservation_Successful() {
+    public void testMakeReservation_Successful() {
         String isbn = "9782853006322";
         LocalDate reservationDate = LocalDate.now();
 
@@ -126,7 +127,7 @@ class ReservationServiceTest {
     }
 
     @Test
-    void testMakeReservation_MaxReservationsReached() {
+    public void testMakeReservation_MaxReservationsReached() {
         String isbn = "9782853006322";
         LocalDate reservationDate = LocalDate.now();
 
@@ -143,7 +144,7 @@ class ReservationServiceTest {
     }
 
     @Test
-    void testCancelReservation_ReservationNotFound() {
+    public void testCancelReservation_ReservationNotFound() {
         when(reservationRepository.findById(anyInt())).thenReturn(null);
 
         boolean result = reservationService.cancelReservation(1);
@@ -154,7 +155,7 @@ class ReservationServiceTest {
     }
 
     @Test
-    void testCancelReservation_Success() {
+    public void testCancelReservation_Success() {
 
         Reservation reservation = new Reservation(1L, 
                                                   new Book("9782853006322", "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true),
@@ -175,5 +176,44 @@ class ReservationServiceTest {
         assertEquals(LocalDate.now(), reservation.getDueDate());
 
         verify(reservationRepository).save(reservation);
+    }
+
+    @Test
+    public void testGetReservationHistory() {
+
+        String memberId = "5";
+        Book book1 = new Book("9782853006322", "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
+        Book book2 = new Book("9782841820901", "Exode", "Moïse", "Société Biblique Française", Format.BROCHE, true);
+
+        Member member = new Member(8L, memberId, "GRANDIN", "Maxime", LocalDate.now().minusYears(25), Gender.MONSIEUR, "lala@lala.fr");
+
+        Reservation reservation1 = new Reservation(1L, book1, member, LocalDate.of(2025, 2, 1), LocalDate.of(2025, 3, 1), ReservationStatus.ACTIVE);
+        Reservation reservation2 = new Reservation(2L, book2, member, LocalDate.of(2025, 1, 10), LocalDate.of(2025, 2, 10), ReservationStatus.CANCELLED);
+
+        when(reservationRepository.findByMemberId(memberId)).thenReturn(Arrays.asList(reservation1, reservation2));
+
+        List<Reservation> reservations = reservationService.getReservationHistory(memberId);
+
+        assertNotNull(reservations);
+        assertEquals(2, reservations.size());
+        assertTrue(reservations.contains(reservation1));
+        assertTrue(reservations.contains(reservation2));
+
+        verify(reservationRepository, times(1)).findByMemberId(memberId);
+    }
+
+    @Test
+    public void testGetReservationHistory_NoReservationsFound() {
+
+        String memberId = "5";
+
+        when(reservationRepository.findByMemberId(memberId)).thenReturn(Arrays.asList());
+
+        List<Reservation> reservations = reservationService.getReservationHistory(memberId);
+
+        assertNotNull(reservations);
+        assertTrue(reservations.isEmpty()); 
+
+        verify(reservationRepository, times(1)).findByMemberId(memberId);
     }
 }

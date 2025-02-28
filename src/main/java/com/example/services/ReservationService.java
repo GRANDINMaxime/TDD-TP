@@ -71,8 +71,7 @@ public class ReservationService {
 
         return reservation;
     }
-    
-
+ 
 
     public boolean cancelReservation(int reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId);
@@ -88,5 +87,9 @@ public class ReservationService {
         reservationRepository.save(reservation);
 
         return true;
+    }
+
+    public List<Reservation> getReservationHistory(String memberId) {
+        return reservationRepository.findByMemberId(memberId);
     }
 }
