@@ -13,8 +13,9 @@ public class Member {
     private final LocalDate dateOfBirth;
     private final Gender gender;
     private final List<Reservation> reservations;
+    private final String email;
 
-    public Member(Long id, String membershipCode, String lastName, String firstName, LocalDate dateOfBirth, Gender gender) {
+    public Member(Long id, String membershipCode, String lastName, String firstName, LocalDate dateOfBirth, Gender gender, String email) {
         this.id = id;
         this.membershipCode = membershipCode;
         this.lastName = lastName;
@@ -22,6 +23,7 @@ public class Member {
         this.dateOfBirth = dateOfBirth;
         this.gender = gender;
         this.reservations = new ArrayList<>();
+        this.email = email;
     }
 
     // Getter methods for all fields
@@ -61,6 +63,10 @@ public class Member {
     // Method to cancel a reservation
     public void cancelReservation(Reservation reservation) {
         reservations.remove(reservation);
+    }
+
+    public String getEmail() {
+        return email;
     }
 }
 

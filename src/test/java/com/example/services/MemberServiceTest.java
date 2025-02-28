@@ -25,7 +25,7 @@ public class MemberServiceTest {
 
     @Test
     void testAddMember_Success() {
-        Member member = new Member(1L, "MBR123", "Dupont", "Jean", LocalDate.of(1990, 5, 20), Gender.MONSIEUR);
+        Member member = new Member(1L, "MBR123", "Dupont", "Jean", LocalDate.of(1990, 5, 20), Gender.MONSIEUR,"lala@lala.fr");
         when(memberRepositoryMock.save(member)).thenReturn(member);
 
         Member savedMember = memberService.addMember(member);
@@ -47,7 +47,7 @@ public class MemberServiceTest {
 
     @Test
     void testUpdateMember_Success() {
-        Member member = new Member(1L, "MBR123", "Dupont", "Jean", LocalDate.of(1990, 5, 20), Gender.MONSIEUR);
+        Member member = new Member(1L, "MBR123", "Dupont", "Jean", LocalDate.of(1990, 5, 20), Gender.MONSIEUR, "lala@lala.fr");
         when(memberRepositoryMock.update(member)).thenReturn(member);
 
         Member updatedMember = memberService.updateMember(member);
@@ -68,7 +68,7 @@ public class MemberServiceTest {
 
     @Test
     void testUpdateMember_NullId() {
-        Member member = new Member(null, "MBR123", "Dupont", "Jean", LocalDate.of(1990, 5, 20), Gender.MONSIEUR);
+        Member member = new Member(null, "MBR123", "Dupont", "Jean", LocalDate.of(1990, 5, 20), Gender.MONSIEUR, "lala@lala.fr");
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             memberService.updateMember(member);
@@ -80,7 +80,7 @@ public class MemberServiceTest {
 
     @Test
     void testDeleteMember_Success() {
-        Member member = new Member(1L, "MBR123", "Dupont", "Jean", LocalDate.of(1990, 5, 20), Gender.MONSIEUR);
+        Member member = new Member(1L, "MBR123", "Dupont", "Jean", LocalDate.of(1990, 5, 20), Gender.MONSIEUR, "lala@lala.fr");
 
         memberService.deleteMember(member);
 
@@ -99,7 +99,7 @@ public class MemberServiceTest {
 
     @Test
     void testDeleteMember_NullId_ThrowsException() {
-        Member member = new Member(null, "MBR123", "Dupont", "Jean", LocalDate.of(1990, 5, 20), Gender.MONSIEUR);
+        Member member = new Member(null, "MBR123", "Dupont", "Jean", LocalDate.of(1990, 5, 20), Gender.MONSIEUR, "lala@lala.fr");
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             memberService.deleteMember(member);
@@ -111,8 +111,8 @@ public class MemberServiceTest {
 
     @Test
     void testGetAllMembers_ReturnsList() {
-        Member member1 = new Member(1L, "MBR123", "Dupont", "Jean", LocalDate.of(1990, 5, 20), Gender.MONSIEUR);
-        Member member2 = new Member(2L, "MBR456", "Martin", "Sophie", LocalDate.of(1985, 3, 10), Gender.MADAME);
+        Member member1 = new Member(1L, "MBR123", "Dupont", "Jean", LocalDate.of(1990, 5, 20), Gender.MONSIEUR, "lala@lala.fr");
+        Member member2 = new Member(2L, "MBR456", "Martin", "Sophie", LocalDate.of(1985, 3, 10), Gender.MADAME, "lala@lala.fr");
         List<Member> members = Arrays.asList(member1, member2);
 
         when(memberRepositoryMock.getAllMember()).thenReturn(members);

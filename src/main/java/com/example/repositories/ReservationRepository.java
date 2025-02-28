@@ -1,6 +1,7 @@
 package com.example.repositories;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import com.example.models.Book;
 import com.example.models.Reservation;
@@ -14,5 +15,9 @@ public interface ReservationRepository {
     int countByMemberIdAndEndDateIsNull(String memberId);
 
     Reservation findById(int reservationId);
+
+    List<Reservation> findByMemberIdAndEndDateIsNull(String memberId);
+
+    Reservation findAll();
 
 }

@@ -8,9 +8,11 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 class ReservationServiceTest {
@@ -29,10 +31,15 @@ class ReservationServiceTest {
     @Mock
     private BookRepository bookRepository;
 
+    @Mock
+    private EmailService emailService;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.initMocks(this);
-        reservationService = new ReservationService(reservationRepository, memberRepository, bookService, bookRepository);
+        reservationService = new ReservationService(reservationRepository, memberRepository, bookService, bookRepository
+        //, emailService
+        );
     }
 
     @Test
@@ -98,39 +105,75 @@ class ReservationServiceTest {
 
     @Test
     void testMakeReservation_Successful() {
- 
         String isbn = "9782853006322";
-        LocalDate reservationDate = LocalDate.now(); 
+        LocalDate reservationDate = LocalDate.now();
 
         Book book = new Book(isbn, "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
-        Member member = new Member(8L, "5", "GRANDIN", "Maxime", LocalDate.now().minusYears(25), Gender.MONSIEUR);
+        Member member = new Member(8L, "5", "GRANDIN", "Maxime", LocalDate.now().minusYears(25), Gender.MONSIEUR, "lala@lala.fr");
+        Reservation previousReservation = new Reservation(3L, book, member, reservationDate.minusDays(1), null, ReservationStatus.ACTIVE);
 
         when(bookRepository.findByIsbn(isbn)).thenReturn(book);
         when(memberRepository.findById("memberId")).thenReturn(member);
         when(reservationRepository.countByMemberIdAndEndDateIsNull("memberId")).thenReturn(2);
+        when(reservationRepository.findByMemberIdAndEndDateIsNull("memberId")).thenReturn(List.of(previousReservation));
         when(reservationRepository.save(any(Reservation.class))).thenReturn(new Reservation(4L, book, member, reservationDate, LocalDate.now(), ReservationStatus.ACTIVE));
 
         Reservation reservation = reservationService.makeReservation(isbn, reservationDate, "memberId");
 
         assertNotNull(reservation);
         verify(reservationRepository).save(any(Reservation.class));
+        verify(reservationRepository).findByMemberIdAndEndDateIsNull("memberId"); // Vérifie l'affichage des réservations
     }
 
     @Test
     void testMakeReservation_MaxReservationsReached() {
-
         String isbn = "9782853006322";
         LocalDate reservationDate = LocalDate.now();
 
         Book book = new Book(isbn, "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
-        Member member = new Member(8L, "5", "GRANDIN", "Maxime", LocalDate.now().minusYears(25), Gender.MONSIEUR);
+        Member member = new Member(8L, "5", "GRANDIN", "Maxime", LocalDate.now().minusYears(25), Gender.MONSIEUR, "lala@lala.fr");
 
         when(bookRepository.findByIsbn(isbn)).thenReturn(book);
         when(memberRepository.findById("memberId")).thenReturn(member);
         when(reservationRepository.countByMemberIdAndEndDateIsNull("memberId")).thenReturn(3);
 
         assertThrows(IllegalArgumentException.class, () -> reservationService.makeReservation(isbn, reservationDate, "memberId"));
+
+        verify(reservationRepository, never()).save(any(Reservation.class)); // Vérifie que la réservation n'est pas enregistrée
     }
 
+    @Test
+    void testCancelReservation_ReservationNotFound() {
+        when(reservationRepository.findById(anyInt())).thenReturn(null);
 
+        boolean result = reservationService.cancelReservation(1);
+
+        assertFalse(result);
+
+        verify(reservationRepository, never()).save(any(Reservation.class));
+    }
+
+    @Test
+    void testCancelReservation_Success() {
+
+        Reservation reservation = new Reservation(1L, 
+                                                  new Book("9782853006322", "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true),
+                                                  new Member(8L, "5", "GRANDIN", "Maxime", LocalDate.now().minusYears(25), Gender.MONSIEUR, "lala@lala.fr"),
+                                                  LocalDate.now().minusDays(10),
+                                                  null,
+                                                  ReservationStatus.ACTIVE);
+
+        when(reservationRepository.findById(1)).thenReturn(reservation);
+
+        when(reservationRepository.save(reservation)).thenReturn(reservation);
+
+        boolean result = reservationService.cancelReservation(1);
+
+        assertTrue(result);
+
+        assertNotNull(reservation.getDueDate());
+        assertEquals(LocalDate.now(), reservation.getDueDate());
+
+        verify(reservationRepository).save(reservation);
+    }
 }
