@@ -175,6 +175,14 @@ public class BookServiceTest {
     }
 
     @Test
+    public void testSearchBook_NoCriteria() {
+        Exception exception = assertThrows(IllegalArgumentException.class, 
+            () -> bookService.searchBook(null, null, null));
+        
+        assertEquals("At least one search criterion (ISBN, title, or author) must be provided.", exception.getMessage());
+    }
+
+    @Test
     public void testSearchBook_ByTitle() {
         Book mockBook = new Book("9782853006322", "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
         

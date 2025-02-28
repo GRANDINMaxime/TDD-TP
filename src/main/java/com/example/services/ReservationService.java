@@ -18,16 +18,16 @@ public class ReservationService {
     private final MemberRepository memberRepository;
     private final BookService bookService;
     private final BookRepository bookRepository;
-    //private final EmailService emailService;
+    private final EmailService emailService;
 
     public ReservationService(ReservationRepository reservationRepository, MemberRepository memberRepository, BookService bookService, BookRepository bookRepository
-    //, EmailService emailService
+    , EmailService emailService
     ) {
         this.reservationRepository = reservationRepository;
         this.memberRepository = memberRepository;
         this.bookService = bookService;
         this.bookRepository = bookRepository;
-        //this.emailService = emailService;
+        this.emailService = emailService;
     }
     public boolean checkAvailability(String isbn, LocalDate reservationDate) {
         Book book = bookRepository.findByIsbn(isbn);
@@ -71,7 +71,6 @@ public class ReservationService {
 
         return reservation;
     }
- 
 
     public boolean cancelReservation(int reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId);
@@ -91,5 +90,21 @@ public class ReservationService {
 
     public List<Reservation> getReservationHistory(String memberId) {
         return reservationRepository.findByMemberId(memberId);
+    }
+
+    public void sendOverdueReminders() {
+        LocalDate today = LocalDate.now();
+        List<Reservation> overdueReservations = reservationRepository.findOverdueReservations(today);
+
+        Map<String, Boolean> notifiedMembers = new HashMap<>();
+    
+        for (Reservation reservation : overdueReservations) {
+            Member member = reservation.getMember();
+            if (!notifiedMembers.containsKey(member.getEmail())) {
+                emailService.sendEmail(member.getEmail(), "Rappel : Réservation en retard", 
+                    "Cher(e) " + member.getFirstName() + ", vous avez une ou plusieurs réservations en retard. Merci de les retourner au plus vite.");
+                notifiedMembers.put(member.getEmail(), true);
+            }
+        }
     }
 }

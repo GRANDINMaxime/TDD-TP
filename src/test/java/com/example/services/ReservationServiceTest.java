@@ -14,6 +14,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class ReservationServiceTest {
@@ -39,7 +41,7 @@ class ReservationServiceTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         reservationService = new ReservationService(reservationRepository, memberRepository, bookService, bookRepository
-        //, emailService
+        , emailService
         );
     }
 
@@ -216,4 +218,24 @@ class ReservationServiceTest {
 
         verify(reservationRepository, times(1)).findByMemberId(memberId);
     }
+
+    @Test
+    public void testSendReminderEmailsForOverdueReservations() {
+
+        Member member = new Member(1L, "123", "Dupont", "Jean", LocalDate.of(1990, 5, 20), Gender.MONSIEUR, "lala@lala.fr");
+        Book book1 = new Book("9782853006322", "La Genèse", "Moïse", "Société Biblique Française", Format.BROCHE, true);
+        Book book2 = new Book("9782853006323", "Exode", "Moïse", "Société Biblique Française", Format.BROCHE, true);
+
+        Reservation overdueRes1 = new Reservation(1L, book1, member, LocalDate.of(2024, 1, 1), LocalDate.of(2024, 2, 1), ReservationStatus.ACTIVE);
+        Reservation overdueRes2 = new Reservation(2L, book2, member, LocalDate.of(2024, 1, 15), LocalDate.of(2024, 2, 15), ReservationStatus.ACTIVE);
+
+        List<Reservation> overdueReservations = Arrays.asList(overdueRes1, overdueRes2);
+
+        when(reservationRepository.findOverdueReservations(LocalDate.now())).thenReturn(overdueReservations);
+
+        reservationService.sendOverdueReminders();
+
+        verify(emailService, times(1)).sendEmail(eq(member.getEmail()), anyString(), anyString());
+    }
+
 }

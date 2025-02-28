@@ -22,5 +22,7 @@ public interface ReservationRepository {
 
     public List<Reservation> findByMemberId(String memberId);
 
+    List<Reservation> findOverdueReservations(LocalDate currentDate);
+
 
 }
